@@ -1,0 +1,11 @@
+{
+  "name": "@01ht/ht-app-init",
+  "version": "1.0.0",
+  "repository": "01ht/ht-app-init",
+  "author": "01HT Ltd",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@01ht/ht-app-browser-not-supported":
+      "github:01ht/ht-app-browser-not-supported"
+  }
+}
