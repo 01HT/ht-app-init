@@ -31,10 +31,11 @@ async function checkBrowserSupport() {
   return browserSupported;
 }
 
-function addScript(src, async) {
+function addScript(src, async, module) {
   const script = document.createElement("script");
   script.src = src;
   if (async) script.async = true;
+  if (module) script.setAttribute("type", "module");
   script.onload = _ => {
     if (src === "/node_modules/firebase/firebase-app.js") {
       addScript("/node_modules/firebase/firebase-auth.js", true);
@@ -75,21 +76,22 @@ async function initApp(appConfig) {
     );
     return;
   } else {
-    // Need for crawlers
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function() {
+        navigator.serviceWorker.register("/service-worker.js", {
+          scope: "/"
+        });
+      });
+    }
+    // Add polyfills for crawlers
     addScript(
       "/node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"
     );
+    // Add app shell module
+    addScript(`/src/components/${window.appConfig.shellName}.js`, true, true);
     window.firebaseAuthReady = false;
     window.firebaseFirestoreReady = false;
     addScript("/node_modules/firebase/firebase-app.js", true);
-  }
-
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function() {
-      navigator.serviceWorker.register("/service-worker.js", {
-        scope: "/"
-      });
-    });
   }
 }
 
