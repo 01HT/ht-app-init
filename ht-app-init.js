@@ -75,10 +75,10 @@ async function initApp(appConfig) {
     );
     return;
   } else {
-    // Need for rendertron
-    // addScript(
-    //   "/node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"
-    // );
+    // Need for crawlers
+    addScript(
+      "/node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"
+    );
     window.firebaseAuthReady = false;
     window.firebaseFirestoreReady = false;
     addScript("/node_modules/firebase/firebase-app.js", true);
