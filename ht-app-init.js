@@ -36,18 +36,20 @@ function addScript(src, async, module) {
   script.src = src;
   if (async) script.async = true;
   if (module) script.setAttribute("type", "module");
-  script.onload = _ => {
-    if (src === "/node_modules/firebase/firebase-app.js") {
-      addScript("/node_modules/firebase/firebase-auth.js", true);
-      addScript("/node_modules/firebase/firebase-firestore.js", true);
-    }
-    if (src === "/node_modules/firebase/firebase-auth.js")
-      window.firebaseAuthReady = true;
-    if (src === "/node_modules/firebase/firebase-firestore.js")
-      window.firebaseFirestoreReady = true;
-    if (window.firebaseAuthReady && window.firebaseFirestoreReady)
-      initFirebaseApp();
-  };
+  if (src.includes("/node_modules/firebase/")) {
+    script.onload = _ => {
+      if (src === "/node_modules/firebase/firebase-app.js") {
+        addScript("/node_modules/firebase/firebase-auth.js", true);
+        addScript("/node_modules/firebase/firebase-firestore.js", true);
+      }
+      if (src === "/node_modules/firebase/firebase-auth.js")
+        window.firebaseAuthReady = true;
+      if (src === "/node_modules/firebase/firebase-firestore.js")
+        window.firebaseFirestoreReady = true;
+      if (window.firebaseAuthReady && window.firebaseFirestoreReady)
+        initFirebaseApp();
+    };
+  }
   document.body.appendChild(script);
 }
 
