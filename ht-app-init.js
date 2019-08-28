@@ -1,8 +1,8 @@
 "use strict";
 async function getProjectEnvironment() {
-  const host = location.host;
-  if (appConfig.prod.hosts.indexOf(host) !== -1) return "prod";
-  if (appConfig.dev.hosts.indexOf(host) !== -1) return "dev";
+  const host = window.location.host;
+  if (window.appConfig.prod.hosts.indexOf(host) !== -1) return "prod";
+  if (window.appConfig.dev.hosts.indexOf(host) !== -1) return "dev";
   throw new Error("Wrong host");
 }
 
@@ -15,11 +15,14 @@ function addNoindexMeta() {
 
 async function redirectIfDefaultFirebaseDomain() {
   if (
-    appConfig.firebaseDomains.indexOf(location.host) !== -1 &&
-    location.origin !== appConfig.origin
+    window.appConfig.firebaseDomains.indexOf(window.location.host) !== -1 &&
+    window.location.origin !== window.appConfig.origin
   ) {
-    let newHref = location.href.replace(location.origin, appConfig.origin);
-    location.replace(newHref);
+    let newHref = window.location.href.replace(
+      window.location.origin,
+      window.appConfig.origin
+    );
+    window.location.replace(newHref);
   }
 }
 
@@ -44,29 +47,30 @@ function addScript(src, async, module) {
         addScript("/node_modules/firebase/firebase-firestore.js", true);
       }
       if (src === "/node_modules/firebase/firebase-auth.js")
-        firebaseAuthReady = true;
+        window.firebaseAuthReady = true;
       if (src === "/node_modules/firebase/firebase-firestore.js")
-        firebaseFirestoreReady = true;
-      if (firebaseAuthReady && firebaseFirestoreReady) initFirebaseApp();
+        window.firebaseFirestoreReady = true;
+      if (window.firebaseAuthReady && window.firebaseFirestoreReady)
+        initFirebaseApp();
     };
   }
   document.body.appendChild(script);
 }
 
 function initFirebaseApp() {
-  firebase.initializeApp(appConfig.firebaseConfig);
-  let appElement = document.createElement(appConfig.shellName);
+  window.firebase.initializeApp(window.appConfig.firebaseConfig);
+  let appElement = document.createElement(window.appConfig.shellName);
   document.body.appendChild(appElement);
 }
 
 async function initApp() {
   const projectEnv = await getProjectEnvironment();
   if (projectEnv === "dev") addNoindexMeta();
-  for (let name in appConfig[projectEnv]) {
-    appConfig[name] = appConfig[projectEnv][name];
+  for (let name in window.appConfig[projectEnv]) {
+    window.appConfig[name] = window.appConfig[projectEnv][name];
   }
-  delete appConfig["dev"];
-  delete appConfig["prod"];
+  delete window.appConfig["dev"];
+  delete window.appConfig["prod"];
 
   await redirectIfDefaultFirebaseDomain();
 
@@ -90,9 +94,9 @@ async function initApp() {
       "/node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"
     );
     // Add app shell module
-    addScript(`/src/components/${appConfig.shellName}.js`, true, true);
-    firebaseAuthReady = false;
-    firebaseFirestoreReady = false;
+    addScript(`/src/components/${window.appConfig.shellName}.js`, true, true);
+    window.firebaseAuthReady = false;
+    window.firebaseFirestoreReady = false;
     addScript("/node_modules/firebase/firebase-app.js", true);
   }
 }
