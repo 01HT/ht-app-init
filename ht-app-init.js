@@ -1,7 +1,8 @@
 "use strict";
-async function getProjectEnvironment(appConfig, currentHost) {
-  if (appConfig.prod.hosts.indexOf(currentHost) !== -1) return "prod";
-  if (appConfig.dev.hosts.indexOf(currentHost) !== -1) return "dev";
+async function getProjectEnvironment() {
+  const host = location.host;
+  if (appConfig.prod.hosts.indexOf(host) !== -1) return "prod";
+  if (appConfig.dev.hosts.indexOf(host) !== -1) return "dev";
   throw new Error("Wrong host");
 }
 
@@ -12,21 +13,21 @@ function addNoindexMeta() {
   document.head.appendChild(meta);
 }
 
-async function redirectIfDefaultFirebaseDomain(appConfig, currentHost) {
+async function redirectIfDefaultFirebaseDomain() {
   if (
-    appConfig.firebaseDomains.indexOf(currentHost) !== -1 &&
-    currentHost !== appConfig.domain
+    appConfig.firebaseDomains.indexOf(location.host) !== -1 &&
+    location.origin !== appConfig.origin
   ) {
-    let newHref = window.location.href.replace(currentHost, appConfig.domain);
-    window.location.replace(newHref);
+    let newHref = location.href.replace(location.origin, appConfig.origin);
+    location.replace(newHref);
   }
 }
 
 async function checkBrowserSupport() {
   const browserSupported =
     "attachShadow" in Element.prototype &&
-    window.customElements &&
-    window.HTMLTemplateElement &&
+    customElements &&
+    HTMLTemplateElement &&
     document.createElement("script").noModule !== undefined;
   return browserSupported;
 }
@@ -43,32 +44,31 @@ function addScript(src, async, module) {
         addScript("/node_modules/firebase/firebase-firestore.js", true);
       }
       if (src === "/node_modules/firebase/firebase-auth.js")
-        window.firebaseAuthReady = true;
+        firebaseAuthReady = true;
       if (src === "/node_modules/firebase/firebase-firestore.js")
-        window.firebaseFirestoreReady = true;
-      if (window.firebaseAuthReady && window.firebaseFirestoreReady)
-        initFirebaseApp();
+        firebaseFirestoreReady = true;
+      if (firebaseAuthReady && firebaseFirestoreReady) initFirebaseApp();
     };
   }
   document.body.appendChild(script);
 }
 
 function initFirebaseApp() {
-  window.firebase.initializeApp(window.appConfig.firebaseConfig);
-  let appElement = document.createElement(window.appConfig.shellName);
+  firebase.initializeApp(appConfig.firebaseConfig);
+  let appElement = document.createElement(appConfig.shellName);
   document.body.appendChild(appElement);
 }
 
-async function initApp(appConfig) {
-  const currentHost = window.location.host;
-  const projectEnv = await getProjectEnvironment(appConfig, currentHost);
+async function initApp() {
+  const projectEnv = await getProjectEnvironment();
   if (projectEnv === "dev") addNoindexMeta();
-  for (let name in window.appConfig[projectEnv]) {
-    window.appConfig[name] = window.appConfig[projectEnv][name];
+  for (let name in appConfig[projectEnv]) {
+    appConfig[name] = appConfig[projectEnv][name];
   }
-  delete window.appConfig["dev"];
-  delete window.appConfig["prod"];
-  await redirectIfDefaultFirebaseDomain(window.appConfig, currentHost);
+  delete appConfig["dev"];
+  delete appConfig["prod"];
+
+  await redirectIfDefaultFirebaseDomain();
 
   const browserSupported = await checkBrowserSupport();
 
@@ -90,11 +90,11 @@ async function initApp(appConfig) {
       "/node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"
     );
     // Add app shell module
-    addScript(`/src/components/${window.appConfig.shellName}.js`, true, true);
-    window.firebaseAuthReady = false;
-    window.firebaseFirestoreReady = false;
+    addScript(`/src/components/${appConfig.shellName}.js`, true, true);
+    firebaseAuthReady = false;
+    firebaseFirestoreReady = false;
     addScript("/node_modules/firebase/firebase-app.js", true);
   }
 }
 
-initApp(window.appConfig);
+initApp();
